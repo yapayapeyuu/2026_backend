@@ -1,7 +1,5 @@
-/* Generar el modelo de mongoose de workspace */
-
+/* Generar el modelo de mongoose de workspace  */
 import mongoose from "mongoose";
-
 const workspaceSchema = new mongoose.Schema({
     nombre: {
         type: String,

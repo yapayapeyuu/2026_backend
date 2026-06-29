@@ -1,11 +1,12 @@
-/* Crear el repository para manipular espacios de trabajo
+/* 
+Crear el repository para manipular espacios de trabajo
 
 - getAll() Obtiene toda la lista de espacios de trabajo activos (Recomendacion: Usen find en vez de findOne, ya que quieren obtener una lista de resultados)
 - getById(workspace_id) Obtener un espacio de trabajo por su id
 - deleteById(workspace_id) Eliminar un espacio de trabajo por su id (soft delete)
 - updateById(workspace_id, update_data) Permite actualizar un espacio de trabajo por su ID
-- create(nombre, descripcion) Permite crear un espacio de trabajo en la DB. */
-
+- create(nombre, descripcion) Permite crear un espacio de trabajo en la DB 
+*/
 import Workspace from '../models/workspace.model.js';
 class WorkspaceRepository {
     async getAll(){
@@ -15,9 +16,7 @@ class WorkspaceRepository {
         return await Workspace.findById(workspace_id);
     }
     async softDeleteById(workspace_id){
-        await this.updateById(workspace_id, {estado: false});
-        //acá estamos buscando centralizar la forma de actualizado 
-        //await Workspace.findByIdAndUpdate(workspace_id, {activo: false});
+        return await Workspace.findByIdAndUpdate(workspace_id, {estado: false}, { new: true });
     }
     async deleteById(workspace_id){
         return await Workspace.findByIdAndDelete(workspace_id, {estado: false});

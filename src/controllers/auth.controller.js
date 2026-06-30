@@ -7,10 +7,10 @@ import jwt from 'jsonwebtoken'
 
 class AuthController {
     async register(req, res) {
-        const { name, email, password } = req.body;
+        const { username, email, password } = req.body;
 
         // Validaciones
-        if (!name || name.length <= 2) {
+        if (!username || username.length <= 2) {
             throw new ServerError("Nombre debe ser mayor a 2 caracteres", 400)
         }
 
@@ -29,7 +29,7 @@ class AuthController {
 
         const hashed_password = await bcrypt.hash(password, 12);
 
-        const newUser = await userRepository.create(name, email, hashed_password);
+        const newUser = await userRepository.create(username, email, hashed_password);
 
         const verification_token = jwt.sign(
             {
@@ -44,7 +44,7 @@ class AuthController {
                 from: ENVIRONMENT.GMAIL_USERNAME,
                 subject: "Verifica tu mail",
                 html: `
-                        <h1>Bienvenido a SLACK</h1>
+                        <h1>Bienvenido a App de Notas</h1>
                         <a href='${ENVIRONMENT.URL_BACKEND}/api/auth/verify-email?verification_token=${verification_token}'>Click aqui</a> para verificar tu cuenta
                     `
             }

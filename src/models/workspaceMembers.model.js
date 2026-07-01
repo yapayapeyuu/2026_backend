@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { WORKSPACE_COLLECTION_NAME } from "./workspace.model.js";
 import { USER_COLLECTION_NAME } from "./user.model.js";
 import { MEMBER_WORKSPACE_ROLES } from "../constants/memberRoles.constant.js";
-import MEMBER_INVITATION_STATUS from "../constants/memberInvitationStatus.constant.js";
+//import MEMBER_INVITATION_STATUS from "../constants/memberInvitationStatus.constant.js";
 
 const workspaceMemberSchema = new mongoose.Schema({
     fk_workspace_id: {
@@ -21,10 +21,14 @@ const workspaceMemberSchema = new mongoose.Schema({
         required: true
     },
     rol: {
-        enum: [MEMBER_WORKSPACE_ROLES.ADMIN, MEMBER_WORKSPACE_ROLES.OWNER, MEMBER_WORKSPACE_ROLES.USER],
+        //enum: [MEMBER_WORKSPACE_ROLES.ADMIN, MEMBER_WORKSPACE_ROLES.OWNER, MEMBER_WORKSPACE_ROLES.USER],
         type: String,
-        default: MEMBER_WORKSPACE_ROLES.USER
-    },
+        //default: MEMBER_WORKSPACE_ROLES.USER
+        enum: [MEMBER_WORKSPACE_ROLES.OWNER, MEMBER_WORKSPACE_ROLES.COLLABORATOR],
+        default: MEMBER_WORKSPACE_ROLES.COLLABORATOR,
+        required: true
+
+    }/* ,
     estatus_invitacion: {
         type: String,
         enum: [
@@ -37,9 +41,43 @@ const workspaceMemberSchema = new mongoose.Schema({
     fecha_expiracion_invitacion: {
         type: Date,
         default: null
-    }
+    } */
 })
 export const WORKSPACE_MEMBER_MODEL_NAME = 'WorkspaceMember'
 const WorkspaceMember = mongoose.model(WORKSPACE_MEMBER_MODEL_NAME, workspaceMemberSchema)
 
 export default WorkspaceMember
+
+/* import mongoose from 'mongoose'
+import { NOTE_COLLECTION_NAME } from './note.model.js'
+import { USER_COLLECTION_NAME } from './user.model.js'
+import { NOTE_ROLES } from '../constants/noteRoles.constant.js'
+
+const noteMemberSchema = new mongoose.Schema({
+    fk_note_id: {
+        type: mongoose.Schema.ObjectId,
+        required: true,
+        ref: NOTE_COLLECTION_NAME
+    },
+    fk_user_id: {
+        type: mongoose.Schema.ObjectId,
+        required: true,
+        ref: USER_COLLECTION_NAME
+    },
+    fecha_creacion: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+    rol: {
+        type: String,
+        enum: [NOTE_ROLES.OWNER, NOTE_ROLES.COLLABORATOR],
+        default: NOTE_ROLES.COLLABORATOR,
+        required: true
+    }
+})
+
+export const NOTE_MEMBER_MODEL_NAME = 'NoteMember'
+const NoteMember = mongoose.model(NOTE_MEMBER_MODEL_NAME, noteMemberSchema)
+
+export default NoteMember */

@@ -1,4 +1,4 @@
-import MEMBER_INVITATION_STATUS from "../constants/memberInvitationStatus.constant.js";
+//import MEMBER_INVITATION_STATUS from "../constants/memberInvitationStatus.constant.js";
 import { MEMBER_WORKSPACE_ROLES } from "../constants/memberRoles.constant.js";
 import ServerError from "../helpers/serverError.helper.js";
 import workspaceRepository from "../repositories/workspace.repository.js";
@@ -6,7 +6,93 @@ import workspaceMemberRepository from "../repositories/workspaceMember.repositor
 
 
 class WorkspaceController {
-    async create(request, response) {
+     async create(request, response) {
+            const user_id = request.user.id
+            const { nombre, descripcion } = request.body
+    
+            const final_nombre = nombre && nombre.trim() !== '' ? nombre.trim() : 'Nota'
+            const final_descripcion = descripcion || ''
+    
+            const new_workspace = await workspaceRepository.create(final_nombre, final_descripcion)
+    
+            await workspaceMemberRepository.create(
+                user_id,
+                new_workspace._id,
+                MEMBER_WORKSPACE_ROLES.OWNER
+            )
+    
+            return response.status(201).json({
+                ok: true,
+                status: 201,
+                message: 'Nota creada con éxito',
+                data: {
+                    workspace: new_workspace
+                }
+            })
+        }
+    
+        async getAllByUser(request, response) {
+            const user_id = request.user.id
+    
+            const workspaces = await workspaceMemberRepository.getByUserId(user_id)
+    
+            return response.status(200).json({
+                ok: true,
+                status: 200,
+                message: 'Notas obtenidas correctamente',
+                data: {
+                    workspaces
+                }
+            })
+        }
+    
+        async updateById(request, response) {
+            const { workspace_id } = request.params
+            const { nombre, descripcion } = request.body
+            const updated_info = {}
+    
+            if (nombre === undefined && descripcion === undefined) {
+                throw new ServerError('Debes enviar al menos un campo para actualizar', 400)
+            }
+    
+            if (nombre !== undefined) {
+                updated_info.nombre = nombre.trim() !== '' ? nombre.trim() : 'Nota'
+            }
+    
+            if (descripcion !== undefined) {
+                updated_info.descripcion = descripcion
+            }
+    
+            const updated_workspace = await workspaceRepository.updateById(workspace_id, updated_info)
+    
+            return response.status(200).json({
+                ok: true,
+                status: 200,
+                message: 'Nota actualizada con éxito',
+                data: {
+                    workspace: updated_workspace
+                }
+            })
+        }
+    
+        async deleteById(request, response) {
+            const { workspace_id } = request.params
+    
+            const deleted_workspace = await workspaceRepository.softDeleteById(workspace_id)
+    
+            return response.status(200).json({
+                ok: true,
+                status: 200,
+                message: 'Nota eliminada con éxito',
+                data: {
+                    workspace: deleted_workspace
+                }
+            })
+        }
+
+
+
+   /*  async create(request, response) {
 
         const { nombre, descripcion } = request.body;
 
@@ -114,7 +200,7 @@ class WorkspaceController {
 
 
     }
-
+ */
 }
 
 const workspaceController = new WorkspaceController();

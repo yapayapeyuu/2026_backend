@@ -1,12 +1,60 @@
 import ServerError from "../helpers/serverError.helper.js"
-import Workspace from "../models/workspace.model.js"
-import WorkspaceMember from "../models/workspaceMembers.model.js"
+//import Workspace from "../models/workspace.model.js"
+//import WorkspaceMember from "../models/workspaceMembers.model.js"
 import workspaceRepository from "../repositories/workspace.repository.js"
 import workspaceMemberRepository from "../repositories/workspaceMember.repository.js"
 
 function workspaceMiddleware (valid_roles = []){
 
-    return async function (request, response, next) {
+     return async function (request, response, next) {
+            try {
+                const user_id = request.user.id
+                const workspace_id = request.params.workspace_id
+    
+                if (!workspace_id) {
+                    throw new ServerError('No se proporcionó el id de la nota', 400)
+                }
+    
+                const workspace = await workspaceRepository.getById(workspace_id)
+    
+                if (!workspace) {
+                    throw new ServerError('No se encontró la nota', 404)
+                }
+    
+                const workspace_member = await workspaceMemberRepository.getByUserAndWorkspaceId(user_id, workspace_id)
+    
+                if (!workspace_member) {
+                    throw new ServerError('No tenés acceso a esta nota', 403)
+                }
+    
+                if (valid_roles.length > 0 && !valid_roles.includes(workspace_member.rol)) {
+                    throw new ServerError('No tenés permisos para realizar esta acción', 403)
+                }
+    
+                request.workspace = workspace
+                request.workspace_member = workspace_member
+    
+                return next()
+            }
+            catch (error) {
+                if (error instanceof ServerError) {
+                    return response.status(error.status).json({
+                        message: error.message,
+                        ok: false,
+                        status: error.status
+                    })
+                }
+    
+                console.error('Error critico:', error)
+                return response.status(500).json({
+                    message: 'Error interno del servidor',
+                    ok: false,
+                    status: 500
+                })
+            }
+        }
+
+   /*  return async function (request, response, next) {
         try{
             const user_id = request.user.id
             const workspace_id = request.params.workspace_id
@@ -56,10 +104,63 @@ function workspaceMiddleware (valid_roles = []){
                 }
         
         }
-    } 
+    }  */
 }
 
-/* async function workspaceMiddleware(request, response, next) {
+/* 
+
+ return async function (request, response, next) {
+        try {
+            const user_id = request.user.id
+            const note_id = request.params.note_id
+
+            if (!note_id) {
+                throw new ServerError('No se proporcionó el id de la nota', 400)
+            }
+
+            const note = await noteRepository.getById(note_id)
+
+            if (!note) {
+                throw new ServerError('No se encontró la nota', 404)
+            }
+
+            const note_member = await noteMemberRepository.getByUserAndNoteId(user_id, note_id)
+
+            if (!note_member) {
+                throw new ServerError('No tenés acceso a esta nota', 403)
+            }
+
+            if (valid_roles.length > 0 && !valid_roles.includes(note_member.rol)) {
+                throw new ServerError('No tenés permisos para realizar esta acción', 403)
+            }
+
+            request.note = note
+            request.note_member = note_member
+
+            return next()
+        }
+        catch (error) {
+            if (error instanceof ServerError) {
+                return response.status(error.status).json({
+                    message: error.message,
+                    ok: false,
+                    status: error.status
+                })
+            }
+
+            console.error('Error critico:', error)
+            return response.status(500).json({
+                message: 'Error interno del servidor',
+                ok: false,
+                status: 500
+            })
+        }
+    }
+
+
+
+
+async function workspaceMiddleware(request, response, next) {
     try{
         const user_id = request.user.id
         const workspace_id = request.params.workspace_id

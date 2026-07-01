@@ -9,7 +9,58 @@ Crear el repository para manipular espacios de trabajo
 */
 import Workspace from '../models/workspace.model.js';
 class WorkspaceRepository {
-    async getAll(){
+
+    async create(nombre = 'Nota', descripcion = '') {
+            return await Workspace.create({
+                nombre,
+                descripcion
+            })
+        }
+    
+        async getById(workspace_id) {
+            return await Workspace.findOne({
+                _id: workspace_id,
+                estado: true
+            })
+        }
+    
+        async updateById(workspace_id, update_data) {
+            return await Workspace.findByIdAndUpdate(workspace_id, update_data, { new: true })
+        }
+    
+        async softDeleteById(workspace_id) {
+            return await Workspace.findByIdAndUpdate(workspace_id, { estado: false }, { new: true })
+        }
+
+
+   /*  
+    async create(titulo = 'Nota', contenido = '') {
+            return await Note.create({
+                titulo,
+                contenido
+            })
+        }
+    
+        async getById(note_id) {
+            return await Note.findOne({
+                _id: note_id,
+                estado: true
+            })
+        }
+    
+        async updateById(note_id, update_data) {
+            return await Note.findByIdAndUpdate(note_id, update_data, { new: true })
+        }
+    
+        async softDeleteById(note_id) {
+            return await Note.findByIdAndUpdate(note_id, { estado: false }, { new: true })
+        }
+   
+   
+   
+   
+   
+   async getAll(){
         return await Workspace.find({estado: true});
     } 
     async getById(workspace_id){
@@ -30,7 +81,7 @@ class WorkspaceRepository {
             nombre, 
             descripcion, 
         });
-    }
+    } */
 }   
 const workspaceRepository = new WorkspaceRepository();
 export default workspaceRepository;

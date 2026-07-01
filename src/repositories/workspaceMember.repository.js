@@ -1,7 +1,178 @@
-//import MEMBER_INVITATION_STATUS from "../constants/memberInvitationStatus.constant.js"
+import MEMBER_INVITATION_STATUS from "../constants/memberInvitationStatus.constant.js"
 import WorkspaceMember from "../models/workspaceMembers.model.js"
 
+class MemberWorkspaceWithUserInfo {
+    constructor(raw_member) {
+        this.member_id = raw_member._id
+        this.member_rol = raw_member.rol
+        this.member_fecha_creacion = raw_member.fecha_creacion
+        this.user_id = raw_member.fk_user_id._id
+        this.user_nombre = raw_member.fk_user_id.nombre
+        this.user_email = raw_member.fk_user_id.email
+    }
+}
+
 class WorkspaceMemberRepository {
+
+    getActiveInvitationQuery() {
+        return {
+            $or: [
+                { estatus_invitacion: MEMBER_INVITATION_STATUS.ACCEPTED },
+                { estatus_invitacion: { $exists: false } }
+            ]
+        }
+    }
+
+    async create(
+        user_id,
+        workspace_id,
+        rol,
+        estatus_invitacion = MEMBER_INVITATION_STATUS.ACCEPTED,
+        fecha_expiracion_invitacion = null
+    ) {
+        return await WorkspaceMember.create({
+            fk_user_id: user_id,
+            fk_workspace_id: workspace_id,
+            rol,
+            estatus_invitacion,
+            fecha_expiracion_invitacion
+        })
+    }
+
+    async getById(member_id) {
+        return await WorkspaceMember.findById(member_id)
+    }
+
+    async updateById(member_id, update_data) {
+        return await WorkspaceMember.findByIdAndUpdate(member_id, update_data, { new: true })
+    }
+
+    async deleteById(member_id) {
+        return await WorkspaceMember.findByIdAndDelete(member_id)
+    }
+
+    async getByUserAndWorkspaceId(
+        user_id,
+        workspace_id,
+        estatus_invitacion = MEMBER_INVITATION_STATUS.ACCEPTED
+    ) {
+        const invitation_status_query = estatus_invitacion === MEMBER_INVITATION_STATUS.ACCEPTED
+            ? this.getActiveInvitationQuery()
+            : { estatus_invitacion }
+
+        return await WorkspaceMember.findOne({
+            fk_user_id: user_id,
+            fk_workspace_id: workspace_id,
+            ...invitation_status_query
+        })
+    }
+
+    async getMemberByWorkspaceAndUserId(workspace_id, user_id) {
+        return await WorkspaceMember.findOne({
+            fk_workspace_id: workspace_id,
+            fk_user_id: user_id
+        })
+    }
+
+    async getByUserId(user_id) {
+        const memberships = await WorkspaceMember
+            .find({
+                fk_user_id: user_id,
+                ...this.getActiveInvitationQuery()
+            })
+            .populate({
+                path: 'fk_workspace_id',
+                select: 'nombre descripcion fecha_creacion fecha_actualizacion estado',
+                match: { estado: true }
+            })
+
+        return memberships
+            .filter(membership => membership.fk_workspace_id)
+            .map(membership => ({
+                member_id: membership._id,
+                workspace_id: membership.fk_workspace_id._id,
+                workspace_nombre: membership.fk_workspace_id.nombre,
+                workspace_descripcion: membership.fk_workspace_id.descripcion,
+                workspace_fecha_creacion: membership.fk_workspace_id.fecha_creacion,
+                workspace_fecha_actualizacion: membership.fk_workspace_id.fecha_actualizacion,
+                member_rol: membership.rol,
+                member_fecha_creacion: membership.fecha_creacion
+            }))
+    }
+
+    async getByWorkspaceId(workspace_id) {
+        const members = await WorkspaceMember
+            .find({
+                fk_workspace_id: workspace_id,
+                ...this.getActiveInvitationQuery()
+            })
+            .populate('fk_user_id', 'nombre email')
+
+        return members.map(member => new MemberWorkspaceWithUserInfo(member))
+    }
+
+    async deleteByNoteId(workspace_id) {
+        return await WorkspaceMember.deleteMany({ fk_workspace_id: workspace_id })
+    }
+}
+
+const workspaceMemberRepository = new WorkspaceMemberRepository()
+
+export default workspaceMemberRepository
+
+
+
+/* class WorkspaceMemberRepository {
+
+    async create(user_id, workspace_id, rol) {
+            return await WorkspaceMember.create({
+                fk_user_id: user_id,
+                fk_workspace_id: workspace_id,
+                rol
+            })
+        }
+    
+        async getByUserAndWorkspaceId(user_id, workspace_id) {
+            return await WorkspaceMember.findOne({
+                fk_user_id: user_id,
+                fk_workspace_id: workspace_id
+            })
+        }
+    
+        async getByUserId(user_id) {
+            const memberships = await WorkspaceMember
+                .find({ fk_user_id: user_id })
+                .populate({
+                    path: 'fk_workspace_id',
+                    select: 'nombre descripcion fecha_creacion fecha_actualizacion estado',
+                    match: { estado: true }
+                })
+    
+            return memberships
+                .filter(membership => membership.fk_workspace_id)
+                .map(membership => ({
+                    member_id: membership._id,
+                    workspace_id: membership.fk_workspace_id._id,
+                    workspace_nombre: membership.fk_workspace_id.nombre,
+                    workspace_descripcion: membership.fk_workspace_id.descripcion,
+                    workspace_fecha_creacion: membership.fk_workspace_id.fecha_creacion,
+                    workspace_fecha_actualizacion: membership.fk_workspace_id.fecha_actualizacion,
+                    member_rol: membership.rol,
+                    member_fecha_creacion: membership.fecha_creacion
+                }))
+        }
+        async getMemberByWorkspaceAndUserId(workspace_id, user_id) {
+        return await WorkspaceMember.findOne({
+            fk_workspace_id: workspace_id,
+            fk_user_id: user_id
+        });
+    }
+    
+        async deleteByNoteId(workspace_id) {
+            return await WorkspaceMember.deleteMany({ fk_workspace_id: workspace_id })
+        }
+
+/* class WorkspaceMemberRepository {
 
     async create(user_id, workspace_id, rol) {
             return await WorkspaceMember.create({
@@ -42,7 +213,7 @@ class WorkspaceMemberRepository {
     
         async deleteByNoteId(workspace_id) {
             return await WorkspaceMember.deleteMany({ fk_workspace_id: workspace_id })
-        }
+        } */
 
     /* 
     async create(user_id, note_id, rol) {
@@ -180,7 +351,7 @@ class WorkspaceMemberRepository {
             fk_user_id: user_id
         });
     }
- */
+
 
 }
 
@@ -188,7 +359,7 @@ const workspaceMemberRepository = new WorkspaceMemberRepository()
 
 export default workspaceMemberRepository
 
-
+*/
 /* class MemberWorkspaceWithUserInfo {
     constructor(
         raw_member
@@ -201,4 +372,4 @@ export default workspaceMemberRepository
             this.user_nombre = raw_member.fk_user_id.nombre,
             this.user_email = raw_member.fk_user_id.email
     }
-} */
+} */ 

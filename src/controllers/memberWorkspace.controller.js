@@ -4,7 +4,82 @@ import userRepository from "../repositories/user.repository.js";
 import workspaceMemberRepository from "../repositories/workspaceMember.repository.js";
 import memberWorkspaceService from "../services/memberWorkspace.service.js";
 import jwt from 'jsonwebtoken'
+import { MEMBER_WORKSPACE_ROLES } from "../constants/memberRoles.constant.js";
 
+class MemberWorkspaceController {
+    async inviteUser(request, response) {
+        const { workspace_id } = request.params
+        const { invited_email, role = MEMBER_WORKSPACE_ROLES.COLLABORATOR } = request.body
+        const { id: client_id } = request.user
+
+        if (!invited_email) {
+            throw new ServerError("Debes enviar el email del usuario invitado", 400)
+        }
+
+        if (![MEMBER_WORKSPACE_ROLES.COLLABORATOR].includes(role)) {
+            throw new ServerError("El rol indicado no es válido para una nota", 400)
+        }
+
+        await memberWorkspaceService.inviteUser(
+            client_id,
+            invited_email,
+            workspace_id,
+            role
+        )
+
+        return response.status(200).json({
+            ok: true,
+            status: 200,
+            message: "Invitación enviada con éxito"
+        })
+    }
+
+    async getMembersByWorkspace(request, response) {
+        const { workspace_id } = request.params
+        const members = await workspaceMemberRepository.getByWorkspaceId(workspace_id)
+
+        return response.status(200).json({
+            ok: true,
+            status: 200,
+            message: "Integrantes obtenidos correctamente",
+            data: {
+                members
+            }
+        })
+    }
+
+    async processInvitation(request, response) {
+        const { decision } = request.params
+        const { invitation_token } = request.query
+
+        if (!invitation_token) {
+            throw new ServerError("Falta token de invitación", 400)
+        }
+
+        if (
+            decision !== MEMBER_INVITATION_STATUS.ACCEPTED &&
+            decision !== MEMBER_INVITATION_STATUS.REJECTED
+        ) {
+            throw new ServerError("Decisión no válida", 400)
+        }
+
+        await memberWorkspaceService.memberDesicion(invitation_token, decision)
+
+        return response.status(200).send(`
+            <main style="font-family: Arial, sans-serif; padding: 32px; text-align: center;">
+                <h1>Invitación procesada</h1>
+                <p>Tu decisión fue registrada correctamente.</p>
+            </main>
+        `)
+    }
+}
+
+const memberWorkspaceController = new MemberWorkspaceController()
+export default memberWorkspaceController
+
+
+
+/* 
 class MemberWorkspaceController {
     async inviteUser(request, response) {
             const { workspace_id } = request.params;
@@ -53,4 +128,4 @@ class MemberWorkspaceController {
 }
 
 const memberWorkspaceController = new MemberWorkspaceController()
-export default memberWorkspaceController
+export default memberWorkspaceController */

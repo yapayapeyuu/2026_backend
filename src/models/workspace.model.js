@@ -1,7 +1,33 @@
 /* Generar el modelo de mongoose de workspace  */
 import mongoose from "mongoose";
 
-const workspaceSchema = new mongoose.Schema({
+const workspaceSchema = new mongoose.Schema(
+    {
+        nombre: {
+            type: String,
+            required: true,
+            default: 'Nota'
+        },
+        descripcion: {
+            type: String,
+            required: false,
+            default: ''
+        },
+        estado: {
+            type: Boolean,
+            required: true,
+            default: true
+        }
+    },
+    {
+        timestamps: {
+            createdAt: 'fecha_creacion',
+            updatedAt: 'fecha_actualizacion'
+        }
+    }
+)
+
+/* const workspaceSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: true,
@@ -22,7 +48,7 @@ const workspaceSchema = new mongoose.Schema({
         required: true,
         default: true
     }
-})
+}) */
 export const WORKSPACE_COLLECTION_NAME = "Workspace"
 const Workspace = mongoose.model(WORKSPACE_COLLECTION_NAME, workspaceSchema);
 export default Workspace

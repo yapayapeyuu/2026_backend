@@ -5,6 +5,7 @@ import workspaceMemberRepository from "../repositories/workspaceMember.repositor
 import memberWorkspaceService from "../services/memberWorkspace.service.js";
 import jwt from 'jsonwebtoken'
 import { MEMBER_WORKSPACE_ROLES } from "../constants/memberRoles.constant.js";
+import ENVIRONMENT from "../config/environment.config.js";
 
 class MemberWorkspaceController {
     async inviteUser(request, response) {
@@ -67,8 +68,27 @@ class MemberWorkspaceController {
 
         return response.status(200).send(`
             <main style="font-family: Arial, sans-serif; padding: 32px; text-align: center;">
-                <h1>Invitación procesada</h1>
-                <p>Tu decisión fue registrada correctamente.</p>
+                <h1>La invitación fue registrada correctamente.</h1>
+              
+                 <p>
+Ya podés iniciar sesión y comenzar a editar la nota.
+</p>
+
+<a
+   href="${ENVIRONMENT.URL_FRONTEND}/login"
+   style="
+      display:inline-block;
+      margin-top:20px;
+      padding:12px 20px;
+      background:#000;
+      color:#fff;
+      text-decoration:none;
+      border-radius:6px;
+      font-weight:bold;
+   "
+>
+   Ir al Login
+</a>
             </main>
         `)
     }
